@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가평고 3-6</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <aside id="sideMenu" class="side-menu">
+    <div class="side-menu-header">
+      <h2>가평고 3-6</h2>
+      <button id="closeMenuBtn" class="icon-btn dark-btn" type="button">✕</button>
+    </div>
+    <nav class="menu-nav">
+      <a href="#homeSection" class="menu-item">홈</a>
+      <a href="#noticeSection" class="menu-item">공지사항</a>
+      <a href="#scheduleSection" class="menu-item">학사일정</a>
+      <a href="community.html" class="menu-item">커뮤니티</a>
+      <button id="resetProfileBtn" class="menu-item menu-button" type="button">선택과목 다시 설정</button>
+    </nav>
+  </aside>
+
+  <div id="menuOverlay" class="overlay"></div>
+
+  <div id="subjectModal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>가평고 3-6</h2>
+      <p class="modal-desc">이름과 A/B/C 선택과목을 고르면 맞춤 시간표를 보여줄게.</p>
+
+      <div class="form-group">
+        <label for="studentName">이름 또는 닉네임</label>
+        <input type="text" id="studentName" placeholder="예: 윤상혁" />
+      </div>
+
+      <div class="form-group">
+        <label for="trackA">A 선택과목</label>
+        <select id="trackA" class="subject-select">
+          <option value="">선택 안 함</option>
+          <option value="물리학Ⅱ">물리학Ⅱ</option>
+          <option value="생명과학Ⅱ">생명과학Ⅱ</option>
+          <option value="지구과학Ⅱ">지구과학Ⅱ</option>
+          <option value="화학Ⅱ">화학Ⅱ</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="trackB">B 선택과목</label>
+        <select id="trackB" class="subject-select">
+          <option value="">선택 안 함</option>
+          <option value="물리학Ⅱ">물리학Ⅱ</option>
+          <option value="생명과학Ⅱ">생명과학Ⅱ</option>
+          <option value="지구과학Ⅱ">지구과학Ⅱ</option>
+          <option value="화학Ⅱ">화학Ⅱ</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="trackC">C 선택과목</label>
+        <select id="trackC" class="subject-select">
+          <option value="">선택 안 함</option>
+          <option value="물리학Ⅱ">물리학Ⅱ</option>
+          <option value="생명과학Ⅱ">생명과학Ⅱ</option>
+          <option value="지구과학Ⅱ">지구과학Ⅱ</option>
+          <option value="화학Ⅱ">화학Ⅱ</option>
+        </select>
+      </div>
+
+      <button id="saveProfileBtn" class="primary-btn" type="button">시작하기</button>
+    </div>
+  </div>
+
+  <main class="app-shell" id="homeSection">
+    <header class="top-bar">
+      <button id="openMenuBtn" class="icon-btn" type="button">☰</button>
+      <div class="top-bar-right">
+        <span id="todayDate">3월 13일 금요일</span>
+      </div>
+    </header>
+
+    <section class="hero-card glass-card">
+      <div class="hero-left">
+        <div class="location" id="weatherLocation">가평고등학교 📍</div>
+        <div class="temp" id="weatherTemp">--°</div>
+        <div class="weather-status" id="weatherStatus">날씨 불러오는 중</div>
+        <div class="weather-sub" id="weatherSub">기상청 API 연결 확인 중</div>
+      </div>
+      <div class="hero-right">
+        <div class="weather-emoji" id="weatherEmoji">☀️</div>
+      </div>
+    </section>
+
+    <section class="current-class-card glass-card">
+      <div class="current-class-top">
+        <div>
+          <div class="current-class-label">지금 수업</div>
+          <div id="currentClassName" class="current-class-name">시간표를 불러오는 중</div>
+          <div id="currentClassRoom" class="current-class-room">교실 정보 확인 중</div>
+        </div>
+        <div id="currentClassBadge" class="current-class-badge">NOW</div>
+      </div>
+      <div id="currentClassStatus" class="current-class-status">현재 교시를 계산하는 중</div>
+    </section>
+
+    <section class="section-card glass-card">
+      <div class="section-header">
+        <h3>오늘 시간표</h3>
+        <p id="welcomeText">오늘도 잘 버텨보자.</p>
+      </div>
+      <div id="selectedTracks" class="selected-tracks"></div>
+      <div id="timetableList" class="timetable-list">
+        <div class="timetable-item">
+          <div class="period-badge">-</div>
+          <div class="subject-wrap">
+            <div class="subject-name">시간표 불러오는 중</div>
+            <div class="subject-room">NEIS API</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card glass-card meal-card">
+      <div class="section-header">
+        <h3>오늘 급식</h3>
+        <p>점심 기준</p>
+      </div>
+      <ul id="mealList" class="meal-list">
+        <li>급식 불러오는 중</li>
+      </ul>
+    </section>
+
+    <section class="content-card white-card">
+      <div class="content-header">
+        <h3>우리 반 커뮤니티</h3>
+      </div>
+      <div class="content-list">
+        <a href="community.html" class="community-shortcut-card">
+          <strong>커뮤니티 바로가기</strong>
+          <p>글쓰기, 댓글, 좋아요/싫어요, 인기글 확인</p>
+        </a>
+      </div>
+    </section>
+
+    <section id="noticeSection" class="content-card white-card">
+      <div class="content-header">
+        <h3>디버그 정보</h3>
+      </div>
+      <div class="content-list">
+        <div class="list-item">
+          <div>
+            <strong>상태</strong>
+            <p id="debugText">학교코드 7530633 적용</p>
+          </div>
+          <span>FIX</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="scheduleSection" class="content-card white-card">
+      <div class="content-header">
+        <h3>학사일정</h3>
+      </div>
+      <div class="content-list">
+        <div class="list-item">
+          <div>
+            <strong>3월 15일</strong>
+            <p>학급 특색 활동</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="communitySection" class="content-card white-card last-section">
+      <div class="content-header">
+        <h3>커뮤니티</h3>
+      </div>
+      <div class="content-list">
+        <div class="list-item">
+          <div>
+            <strong>자유글</strong>
+            <p>A/B/C 선택 방식으로 변경 완료</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

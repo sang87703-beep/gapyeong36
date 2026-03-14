@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가평고 3-6 커뮤니티</title>
+  <link rel="stylesheet" href="community.css" />
+</head>
+<body>
+  <main class="community-shell">
+    <header class="top-bar">
+      <a href="index.html" class="icon-btn link-btn">←</a>
+      <div class="top-bar-title">
+        <h1>커뮤니티</h1>
+        <p>학생 게시판</p>
+      </div>
+      <a href="write.html" class="primary-small-btn">글쓰기</a>
+    </header>
+
+    <section class="toolbar glass-card">
+      <div class="toolbar-row">
+        <input id="searchInput" class="search-input" type="text" placeholder="제목, 내용 검색" />
+        <select id="sortSelect" class="sort-select">
+          <option value="latest">최신순</option>
+          <option value="likes">좋아요순</option>
+          <option value="views">조회수순</option>
+        </select>
+      </div>
+
+      <div class="toolbar-row chips">
+        <button class="chip active" data-category="all" type="button">전체</button>
+        <button class="chip" data-category="자유" type="button">자유</button>
+        <button class="chip" data-category="질문" type="button">질문</button>
+        <button class="chip" data-category="정보" type="button">정보</button>
+      </div>
+    </section>
+
+    <section class="best-box white-card">
+      <h2>베스트 글</h2>
+      <div id="bestPosts" class="best-posts"></div>
+    </section>
+
+    <section id="postList" class="post-list"></section>
+  </main>
+
+  <script type="module" src="community-firebase.js"></script>
+</body>
+</html>
