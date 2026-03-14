@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>글쓰기</title>
+  <link rel="stylesheet" href="community.css" />
+</head>
+<body>
+  <main class="community-shell">
+    <header class="top-bar">
+      <a href="community.html" class="icon-btn link-btn">←</a>
+      <div class="top-bar-title">
+        <h1>글쓰기</h1>
+        <p>새 게시글 작성</p>
+      </div>
+      <button id="submitBtn" class="primary-small-btn" type="button">등록</button>
+    </header>
+
+    <section class="write-form white-card">
+      <div class="form-group">
+        <label for="authorInput">작성자</label>
+        <input id="authorInput" class="text-input" type="text" placeholder="이름 또는 닉네임" />
+      </div>
+
+      <div class="form-group">
+        <label for="categorySelect">카테고리</label>
+        <select id="categorySelect" class="text-input">
+          <option value="자유">자유</option>
+          <option value="질문">질문</option>
+          <option value="정보">정보</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="titleInput">제목</label>
+        <input id="titleInput" class="text-input" type="text" placeholder="제목을 입력해" />
+      </div>
+
+      <div class="form-group">
+        <label for="contentInput">내용</label>
+        <textarea id="contentInput" class="text-area" placeholder="내용을 입력해"></textarea>
+      </div>
+
+      <p class="helper-text">욕설 필터와 텍스트 전용 커뮤니티가 적용되어 있어.</p>
+    </section>
+  </main>
+
+  <script type="module" src="write-firebase.js"></script>
+</body>
+</html>

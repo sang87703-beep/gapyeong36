@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>게시글 보기</title>
+  <link rel="stylesheet" href="community.css" />
+</head>
+<body>
+  <main class="community-shell">
+    <header class="top-bar">
+      <a href="community.html" class="icon-btn link-btn">←</a>
+      <div class="top-bar-title">
+        <h1>게시글</h1>
+        <p>상세 보기</p>
+      </div>
+      <button id="deleteBtn" class="danger-small-btn" type="button">삭제</button>
+    </header>
+
+    <article class="post-detail white-card">
+      <div class="post-detail-header">
+        <span id="detailCategory" class="detail-category">자유</span>
+        <h2 id="detailTitle">제목</h2>
+        <div class="meta-row">
+          <span id="detailAuthor">작성자</span>
+          <span id="detailDate">2026.03.13</span>
+          <span id="detailViews">조회 0</span>
+        </div>
+      </div>
+
+      <div id="detailContent" class="detail-content"></div>
+
+      <div class="reaction-bar">
+        <button id="likeBtn" class="reaction-btn" type="button">👍 <span id="likeCount">0</span></button>
+        <button id="dislikeBtn" class="reaction-btn" type="button">👎 <span id="dislikeCount">0</span></button>
+      </div>
+    </article>
+
+    <section class="white-card comment-box">
+      <div class="comment-header">
+        <h3>댓글</h3>
+      </div>
+
+      <div class="comment-form">
+        <input id="commentAuthorInput" class="text-input" type="text" placeholder="이름 또는 닉네임" />
+        <textarea id="commentContentInput" class="text-area small-area" placeholder="댓글을 입력해"></textarea>
+        <button id="commentSubmitBtn" class="primary-small-btn" type="button">댓글 등록</button>
+      </div>
+
+      <div id="commentList" class="comment-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="post-firebase.js"></script>
+</body>
+</html>
