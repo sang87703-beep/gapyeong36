@@ -42,16 +42,21 @@ function setTodayDate() {
 function getCurrentPeriod() {
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
+
   const periodTimes = [
-    { period: 1, start: 8 * 60 + 40, end: 9 * 60 + 29 },
-    { period: 2, start: 9 * 60 + 40, end: 10 * 60 + 29 },
-    { period: 3, start: 10 * 60 + 40, end: 11 * 60 + 29 },
-    { period: 4, start: 11 * 60 + 40, end: 12 * 60 + 29 },
-    { period: 5, start: 13 * 60 + 20, end: 14 * 60 + 9 },
-    { period: 6, start: 14 * 60 + 20, end: 15 * 60 + 9 },
-    { period: 7, start: 15 * 60 + 20, end: 16 * 60 + 9 }
+    { period: 1, start: 9 * 60 + 10, end: 10 * 60 },
+    { period: 2, start: 10 * 60 + 10, end: 11 * 60 },
+    { period: 3, start: 11 * 60 + 10, end: 12 * 60 },
+    { period: 4, start: 12 * 60 + 10, end: 13 * 60 },
+    { period: 5, start: 14 * 60, end: 14 * 60 + 50 },
+    { period: 6, start: 15 * 60, end: 15 * 60 + 50 },
+    { period: 7, start: 16 * 60, end: 16 * 60 + 50 }
   ];
-  const current = periodTimes.find(item => currentTime >= item.start && currentTime <= item.end);
+
+  const current = periodTimes.find(
+    item => currentTime >= item.start && currentTime <= item.end
+  );
+
   return current ? current.period : null;
 }
 
@@ -124,7 +129,7 @@ function renderCurrentClass(timetable) {
   const currentPeriod = getCurrentPeriod();
 
   if (!currentPeriod) {
-    currentClassName.textContent = "지금은 쉬는 시간";
+    currentClassName.textContent = "지금은 쉬는시간/점심시간";
     currentClassRoom.textContent = "다음 수업을 확인해봐";
     currentClassStatus.textContent = "수업 시간이 아닐 때는 아래 전체 시간표를 보면 돼.";
     currentClassBadge.textContent = "BREAK";
