@@ -26,93 +26,162 @@ function getSavedProfile() {
   }
 }
 
-function normalizeSubjectText(text) {
+function normalizeText(text) {
   return String(text || "")
     .replace(/\s+/g, "")
     .replace(/Ⅱ/g, "2")
-    .replace(/·/g, "")
+    .replace(/회화Ⅰ/g, "")
+    .replace(/회화I/g, "")
+    .replace(/Ⅰ/g, "1")
     .trim();
 }
 
-function getSelectionMap(profile) {
-  const selections = profile?.selections || {};
-  return {
-    A: selections["선택과목A"] || "",
-    B: selections["선택과목B"] || "",
-    C: selections["선택과목C"] || "",
-    LANG: selections["언어"] || "",
-    SCI_GEO: selections["생과or여지"] || "",
-    HEALTH_ENV: selections["보건or환경"] || ""
-  };
+function getSelectionValue(profile, key, fallback = "") {
+  return profile?.selections?.[key] || fallback;
 }
 
-function applyProfileToSubject(subjectText, profile) {
-  const original = String(subjectText || "").trim();
-  if (!original) return original;
+/*
+  기본 시간표
+  day index: 0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토
+*/
+const BASE_TIMETABLE = {
+  1: {
+    1: "미적",
+    2: "탐구C",
+    3: "언어",
+    4: "탐구A",
+    5: "독서B",
+    6: "스생"
+  },
+  2: {
+    1: "생과or여지",
+    2: "확통",
+    3: "영독A",
+    4: "진로",
+    5: "탐구A",
+    6: "독서A",
+    7: "미적"
+  },
+  3: {
+    1: "탐구C",
+    2: "탐구B",
+    3: "보건or환경",
+    4: "미적",
+    5: "영독A",
+    6: "영독B",
+    7: "확통"
+  },
+  4: {
+    1: "탐구B",
+    2: "생과or여지",
+    3: "언어",
+    4: "미적",
+    5: "확통",
+    6: "탐구A",
+    7: "독서B"
+  },
+  5: {
+    1: "탐구B",
+    2: "탐구C",
+    3: "영독B",
+    4: "독서A"
+  }
+};
 
-  const normalized = normalizeSubjectText(original);
-  const selectionMap = getSelectionMap(profile);
+function replacePlaceholderSubject(baseSubject, profile) {
+  switch (baseSubject) {
+    case "탐구A":
+      return getSelectionValue(profile, "선택과목A", "탐구A");
+    case "탐구B":
+      return getSelectionValue(profile, "선택과목B", "탐구B");
+    case "탐구C":
+      return getSelectionValue(profile, "선택과목C", "탐구C");
+    case "언어":
+      return getSelectionValue(profile, "언어", "언어");
+    case "생과or여지":
+      return getSelectionValue(profile, "생과or여지", "생과or여지");
+    case "보건or환경":
+      return getSelectionValue(profile, "보건or환경", "보건or환경");
+    default:
+      return baseSubject;
+  }
+}
 
-  const replaceIfExists = (value, fallback = original) => value || fallback;
+function getBaseTimetableForDate(date, profile) {
+  const day = date.getDay();
+  const dayTable = BASE_TIMETABLE[day] || {};
 
-  // 선택과목 A
-  if (
-    normalized === "선택과목A" ||
-    normalized === "선택A" ||
-    normalized === "A"
-  ) {
-    return replaceIfExists(selectionMap.A, original);
+  return Object.entries(dayTable)
+    .map(([period, subject]) => ({
+      period: Number(period),
+      subject: replacePlaceholderSubject(subject, profile),
+      room: "6"
+    }))
+    .sort((a, b) => a.period - b.period);
+}
+
+function shouldOverrideWithNeis(neisSubject, baseRawSubject) {
+  const neis = normalizeText(neisSubject);
+  const baseRaw = normalizeText(baseRawSubject);
+
+  if (!neis) return false;
+
+  const placeholderSet = [
+    "탐구A",
+    "탐구B",
+    "탐구C",
+    "언어",
+    "생과or여지",
+    "보건or환경"
+  ].map(normalizeText);
+
+  const commonBaseSet = [
+    "미적",
+    "확통",
+    "진로",
+    "독서A",
+    "독서B",
+    "영독A",
+    "영독B",
+    "스생"
+  ].map(normalizeText);
+
+  if (placeholderSet.includes(baseRaw)) {
+    const keepBaseIfGeneric = [
+      "탐구A",
+      "탐구B",
+      "탐구C",
+      "언어",
+      "생과or여지",
+      "보건or환경",
+      "중국어회화1",
+      "일본어",
+      "프로그래밍",
+      "생활과과학",
+      "여행지리",
+      "보건",
+      "환경",
+      "생활과윤리",
+      "사회문화",
+      "경제",
+      "세계지리",
+      "물리학2",
+      "화학2",
+      "생명과학2",
+      "지구과학2"
+    ].map(normalizeText);
+
+    if (keepBaseIfGeneric.includes(neis)) {
+      return false;
+    }
+    return true;
   }
 
-  // 선택과목 B
-  if (
-    normalized === "선택과목B" ||
-    normalized === "선택B" ||
-    normalized === "B"
-  ) {
-    return replaceIfExists(selectionMap.B, original);
+  if (commonBaseSet.includes(baseRaw)) {
+    return neis !== baseRaw;
   }
 
-  // 선택과목 C
-  if (
-    normalized === "선택과목C" ||
-    normalized === "선택C" ||
-    normalized === "C"
-  ) {
-    return replaceIfExists(selectionMap.C, original);
-  }
-
-  // 언어
-  if (
-    normalized.includes("언어") ||
-    normalized.includes("제2외국어") ||
-    normalized.includes("일중프") ||
-    normalized === "외국어"
-  ) {
-    return replaceIfExists(selectionMap.LANG, original);
-  }
-
-  // 생과 or 여지
-  if (
-    normalized.includes("생과or여지") ||
-    normalized.includes("생과/여지") ||
-    normalized.includes("생명과학여행지리") ||
-    normalized.includes("여행지리") && original.includes("or") ||
-    normalized.includes("생명과학") && original.includes("or")
-  ) {
-    return replaceIfExists(selectionMap.SCI_GEO, original);
-  }
-
-  // 보건 or 환경
-  if (
-    normalized.includes("보건or환경") ||
-    normalized.includes("보건/환경") ||
-    normalized.includes("보건환경")
-  ) {
-    return replaceIfExists(selectionMap.HEALTH_ENV, original);
-  }
-
-  return original;
+  return neis !== baseRaw;
 }
 
 async function fetchMealData(date = new Date()) {
@@ -138,10 +207,9 @@ async function fetchMealData(date = new Date()) {
   return cleanMealText(lunch.DDISH_NM || "");
 }
 
-async function fetchTimetableData(date = new Date()) {
+async function fetchNeisTimetableRaw(date = new Date()) {
   const year = getCurrentYear();
   const dateStr = formatDateYYYYMMDD(date);
-  const profile = getSavedProfile();
 
   const url =
     `https://open.neis.go.kr/hub/hisTimetable` +
@@ -164,16 +232,59 @@ async function fetchTimetableData(date = new Date()) {
 
   return rows
     .sort((a, b) => Number(a.PERIO) - Number(b.PERIO))
-    .map(row => {
-      const rawSubject = row.ITRT_CNTNT || "";
-      const appliedSubject = applyProfileToSubject(rawSubject, profile);
+    .map(row => ({
+      period: Number(row.PERIO),
+      subject: row.ITRT_CNTNT || "",
+      room: row.CLRM_NM || "6"
+    }));
+}
 
+async function fetchTimetableData(date = new Date()) {
+  const profile = getSavedProfile();
+  const baseTimetable = getBaseTimetableForDate(date, profile);
+
+  let neisRows = [];
+  try {
+    neisRows = await fetchNeisTimetableRaw(date);
+  } catch (e) {
+    console.warn("NEIS 시간표 불러오기 실패, 기본 시간표 사용", e);
+  }
+
+  if (!baseTimetable.length) {
+    return neisRows;
+  }
+
+  const day = date.getDay();
+  const baseRawDayTable = BASE_TIMETABLE[day] || {};
+
+  const merged = baseTimetable.map(baseItem => {
+    const neisItem = neisRows.find(item => Number(item.period) === Number(baseItem.period));
+    const baseRawSubject = baseRawDayTable[baseItem.period] || baseItem.subject;
+
+    if (!neisItem) {
+      return baseItem;
+    }
+
+    if (shouldOverrideWithNeis(neisItem.subject, baseRawSubject)) {
       return {
-        period: row.PERIO,
-        subject: appliedSubject,
-        room: row.CLRM_NM || "교실 정보 없음"
+        period: baseItem.period,
+        subject: neisItem.subject || baseItem.subject,
+        room: neisItem.room || baseItem.room || "6"
       };
-    });
+    }
+
+    return {
+      period: baseItem.period,
+      subject: baseItem.subject,
+      room: neisItem.room || baseItem.room || "6"
+    };
+  });
+
+  const extraNeisRows = neisRows.filter(
+    neisItem => !merged.some(baseItem => Number(baseItem.period) === Number(neisItem.period))
+  );
+
+  return [...merged, ...extraNeisRows].sort((a, b) => a.period - b.period);
 }
 
 function getWeatherBaseDateTime(now = new Date()) {
