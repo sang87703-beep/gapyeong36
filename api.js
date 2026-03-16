@@ -30,9 +30,9 @@ function normalizeText(text) {
   return String(text || "")
     .replace(/\s+/g, "")
     .replace(/Ⅱ/g, "2")
-    .replace(/회화Ⅰ/g, "")
-    .replace(/회화I/g, "")
     .replace(/Ⅰ/g, "1")
+    .replace(/·/g, "")
+    .replace(/회화/g, "")
     .trim();
 }
 
@@ -42,7 +42,7 @@ function getSelectionValue(profile, key, fallback = "") {
 
 /*
   기본 시간표
-  day index: 0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토
+  0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토
 */
 const BASE_TIMETABLE = {
   1: {
@@ -88,6 +88,67 @@ const BASE_TIMETABLE = {
   }
 };
 
+/*
+  그룹별 과목-반 정보
+  같은 과목이라도 그룹에 따라 반이 다를 수 있어서
+  group + subject 조합으로 관리
+*/
+const GROUP_SUBJECT_ROOM_MAP = {
+  "선택과목A": {
+    "생활과윤리": "5반",
+    "화학Ⅱ": "7반",
+    "생명과학Ⅱ": "6반"
+  },
+  "선택과목B": {
+    "사회·문화": "3반",
+    "물리학Ⅱ": "5반",
+    "지구과학Ⅱ": "7반",
+    "화학Ⅱ": "6반"
+  },
+  "선택과목C": {
+    "경제": "5반",
+    "세계지리": "2반",
+    "생명과학Ⅱ": "6반",
+    "지구과학Ⅱ": "8반"
+  },
+  "언어": {
+    "일본어": "역사관3층",
+    "중국어": "3반",
+    "프로그래밍": "6반"
+  },
+  "생과or여지": {
+    "생활과 과학": "1반",
+    "여행지리": "6반"
+  },
+  "보건or환경": {
+    "보건": "역사관3층",
+    "환경": "6반"
+  }
+};
+
+/*
+  공통 과목 기본 반 정보
+  선택과목이 아닌 과목들 fallback
+*/
+const COMMON_SUBJECT_ROOM_MAP = {
+  "미적": "6반",
+  "확통": "6반",
+  "진로": "6반",
+  "독서A": "6반",
+  "독서B": "6반",
+  "영독A": "6반",
+  "영독B": "6반",
+  "스생": "6반"
+};
+
+function getGroupRoom(groupName, subject, fallback = "이동수업") {
+  return GROUP_SUBJECT_ROOM_MAP[groupName]?.[subject] || fallback;
+}
+
+function getCommonRoom(subject, fallback = "6반") {
+  return COMMON_SUBJECT_ROOM_MAP[subject] || fallback;
+}
+
 function replacePlaceholderSubject(baseSubject, profile) {
   switch (baseSubject) {
     case "탐구A":
@@ -107,16 +168,41 @@ function replacePlaceholderSubject(baseSubject, profile) {
   }
 }
 
+function getRoomForBaseSlot(baseSubject, replacedSubject) {
+  switch (baseSubject) {
+    case "탐구A":
+      return getGroupRoom("선택과목A", replacedSubject, "이동수업");
+    case "탐구B":
+      return getGroupRoom("선택과목B", replacedSubject, "이동수업");
+    case "탐구C":
+      return getGroupRoom("선택과목C", replacedSubject, "이동수업");
+    case "언어":
+      return getGroupRoom("언어", replacedSubject, "이동수업");
+    case "생과or여지":
+      return getGroupRoom("생과or여지", replacedSubject, "이동수업");
+    case "보건or환경":
+      return getGroupRoom("보건or환경", replacedSubject, "이동수업");
+    default:
+      return getCommonRoom(replacedSubject, "6반");
+  }
+}
+
 function getBaseTimetableForDate(date, profile) {
   const day = date.getDay();
   const dayTable = BASE_TIMETABLE[day] || {};
 
   return Object.entries(dayTable)
-    .map(([period, subject]) => ({
-      period: Number(period),
-      subject: replacePlaceholderSubject(subject, profile),
-      room: "6"
-    }))
+    .map(([period, baseSubject]) => {
+      const replacedSubject = replacePlaceholderSubject(baseSubject, profile);
+      const room = getRoomForBaseSlot(baseSubject, replacedSubject);
+
+      return {
+        period: Number(period),
+        subject: replacedSubject,
+        room,
+        baseSubject
+      };
+    })
     .sort((a, b) => a.period - b.period);
 }
 
@@ -126,11 +212,15 @@ function shouldOverrideWithNeis(neisSubject, baseRawSubject) {
 
   if (!neis) return false;
 
+  // 언어는 항상 사용자 선택 우선
+  if (baseRaw === normalizeText("언어")) {
+    return false;
+  }
+
   const placeholderSet = [
     "탐구A",
     "탐구B",
     "탐구C",
-    "언어",
     "생과or여지",
     "보건or환경"
   ].map(normalizeText);
@@ -151,16 +241,6 @@ function shouldOverrideWithNeis(neisSubject, baseRawSubject) {
       "탐구A",
       "탐구B",
       "탐구C",
-      "언어",
-      "생과or여지",
-      "보건or환경",
-      "중국어회화1",
-      "일본어",
-      "프로그래밍",
-      "생활과과학",
-      "여행지리",
-      "보건",
-      "환경",
       "생활과윤리",
       "사회문화",
       "경제",
@@ -168,12 +248,20 @@ function shouldOverrideWithNeis(neisSubject, baseRawSubject) {
       "물리학2",
       "화학2",
       "생명과학2",
-      "지구과학2"
+      "지구과학2",
+      "일본어",
+      "중국어",
+      "프로그래밍",
+      "생활과과학",
+      "여행지리",
+      "보건",
+      "환경"
     ].map(normalizeText);
 
     if (keepBaseIfGeneric.includes(neis)) {
       return false;
     }
+
     return true;
   }
 
@@ -235,7 +323,7 @@ async function fetchNeisTimetableRaw(date = new Date()) {
     .map(row => ({
       period: Number(row.PERIO),
       subject: row.ITRT_CNTNT || "",
-      room: row.CLRM_NM || "6"
+      room: row.CLRM_NM || "6반"
     }));
 }
 
@@ -254,29 +342,29 @@ async function fetchTimetableData(date = new Date()) {
     return neisRows;
   }
 
-  const day = date.getDay();
-  const baseRawDayTable = BASE_TIMETABLE[day] || {};
-
   const merged = baseTimetable.map(baseItem => {
     const neisItem = neisRows.find(item => Number(item.period) === Number(baseItem.period));
-    const baseRawSubject = baseRawDayTable[baseItem.period] || baseItem.subject;
 
     if (!neisItem) {
-      return baseItem;
+      return {
+        period: baseItem.period,
+        subject: baseItem.subject,
+        room: baseItem.room
+      };
     }
 
-    if (shouldOverrideWithNeis(neisItem.subject, baseRawSubject)) {
+    if (shouldOverrideWithNeis(neisItem.subject, baseItem.baseSubject)) {
       return {
         period: baseItem.period,
         subject: neisItem.subject || baseItem.subject,
-        room: neisItem.room || baseItem.room || "6"
+        room: neisItem.room || baseItem.room
       };
     }
 
     return {
       period: baseItem.period,
       subject: baseItem.subject,
-      room: neisItem.room || baseItem.room || "6"
+      room: baseItem.room
     };
   });
 
