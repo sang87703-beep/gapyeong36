@@ -12,9 +12,14 @@ const mealList = document.getElementById("mealList");
 const welcomeText = document.getElementById("welcomeText");
 const todayDate = document.getElementById("todayDate");
 const studentNameInput = document.getElementById("studentName");
+
 const trackASelect = document.getElementById("trackA");
 const trackBSelect = document.getElementById("trackB");
 const trackCSelect = document.getElementById("trackC");
+const trackLangSelect = document.getElementById("trackLang");
+const trackSciGeoSelect = document.getElementById("trackSciGeo");
+const trackHealthEnvSelect = document.getElementById("trackHealthEnv");
+
 const selectedTracks = document.getElementById("selectedTracks");
 
 const weatherLocation = document.getElementById("weatherLocation");
@@ -62,14 +67,19 @@ function loadProfile() {
 
 function saveProfile() {
   const name = studentNameInput.value.trim() || "3-6 학생";
+
   const profile = {
     name,
     selections: {
-      A: trackASelect.value,
-      B: trackBSelect.value,
-      C: trackCSelect.value
+      선택과목A: trackASelect ? trackASelect.value : "",
+      선택과목B: trackBSelect ? trackBSelect.value : "",
+      선택과목C: trackCSelect ? trackCSelect.value : "",
+      언어: trackLangSelect ? trackLangSelect.value : "",
+      생과or여지: trackSciGeoSelect ? trackSciGeoSelect.value : "",
+      보건or환경: trackHealthEnvSelect ? trackHealthEnvSelect.value : ""
     }
   };
+
   localStorage.setItem("gapyeong36ProfileABC", JSON.stringify(profile));
   subjectModal.classList.add("hidden");
   updateWelcome(profile);
@@ -83,6 +93,7 @@ function updateWelcome(profile) {
 
 function renderSelectionSummary(profile) {
   selectedTracks.innerHTML = "";
+
   const entries = Object.entries(profile.selections || {});
   const validEntries = entries.filter(([, value]) => value);
 
@@ -98,7 +109,6 @@ function renderSelectionSummary(profile) {
     selectedTracks.appendChild(chip);
   });
 }
-
 
 function renderCurrentClass(timetable) {
   if (!currentClassName || !currentClassRoom || !currentClassStatus || !currentClassBadge) return;
@@ -140,25 +150,40 @@ function renderCurrentClass(timetable) {
 function renderTimetable(timetable) {
   const currentPeriod = getCurrentPeriod();
   timetableList.innerHTML = "";
+
   if (!timetable.length) {
     timetableList.innerHTML = `<div class="timetable-item"><div class="period-badge">-</div><div class="subject-wrap"><div class="subject-name">시간표 정보가 없어요</div><div class="subject-room">학교코드/날짜를 확인해줘</div></div></div>`;
     return;
   }
+
   timetable.forEach(item => {
     const timetableItem = document.createElement("div");
     timetableItem.className = "timetable-item";
-    if (Number(currentPeriod) === Number(item.period)) timetableItem.classList.add("current-period");
-    timetableItem.innerHTML = `<div class="period-badge">${item.period}교시</div><div class="subject-wrap"><div class="subject-name">${item.subject}</div><div class="subject-room">${item.room || "교실 정보 없음"}</div></div>`;
+
+    if (Number(currentPeriod) === Number(item.period)) {
+      timetableItem.classList.add("current-period");
+    }
+
+    timetableItem.innerHTML = `
+      <div class="period-badge">${item.period}교시</div>
+      <div class="subject-wrap">
+        <div class="subject-name">${item.subject}</div>
+        <div class="subject-room">${item.room || "교실 정보 없음"}</div>
+      </div>
+    `;
+
     timetableList.appendChild(timetableItem);
   });
 }
 
 function renderMeal(meals) {
   mealList.innerHTML = "";
+
   if (!meals.length) {
     mealList.innerHTML = "<li>급식 정보가 없어요. 학교코드나 날짜를 확인해줘.</li>";
     return;
   }
+
   meals.forEach(menu => {
     const li = document.createElement("li");
     li.textContent = menu;
@@ -180,7 +205,8 @@ function renderWeatherFallback(message) {
 }
 
 async function initAppData() {
-  debugText.textContent = `학교코드 ${CONFIG.neis.schoolCode} 적용 / A·B·C 선택 방식 적용`;
+  debugText.textContent = `학교코드 ${CONFIG.neis.schoolCode} 적용 / 6개 선택과목 방식 적용`;
+
   try {
     const [timetable, meals] = await Promise.all([fetchTimetableData(), fetchMealData()]);
     renderTimetable(timetable);
