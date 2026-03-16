@@ -16,6 +16,105 @@ function cleanMealText(text) {
     .filter(Boolean);
 }
 
+function getSavedProfile() {
+  try {
+    const saved = localStorage.getItem("gapyeong36ProfileABC");
+    return saved ? JSON.parse(saved) : null;
+  } catch (e) {
+    console.error("프로필 불러오기 실패", e);
+    return null;
+  }
+}
+
+function normalizeSubjectText(text) {
+  return String(text || "")
+    .replace(/\s+/g, "")
+    .replace(/Ⅱ/g, "2")
+    .replace(/·/g, "")
+    .trim();
+}
+
+function getSelectionMap(profile) {
+  const selections = profile?.selections || {};
+  return {
+    A: selections["선택과목A"] || "",
+    B: selections["선택과목B"] || "",
+    C: selections["선택과목C"] || "",
+    LANG: selections["언어"] || "",
+    SCI_GEO: selections["생과or여지"] || "",
+    HEALTH_ENV: selections["보건or환경"] || ""
+  };
+}
+
+function applyProfileToSubject(subjectText, profile) {
+  const original = String(subjectText || "").trim();
+  if (!original) return original;
+
+  const normalized = normalizeSubjectText(original);
+  const selectionMap = getSelectionMap(profile);
+
+  const replaceIfExists = (value, fallback = original) => value || fallback;
+
+  // 선택과목 A
+  if (
+    normalized === "선택과목A" ||
+    normalized === "선택A" ||
+    normalized === "A"
+  ) {
+    return replaceIfExists(selectionMap.A, original);
+  }
+
+  // 선택과목 B
+  if (
+    normalized === "선택과목B" ||
+    normalized === "선택B" ||
+    normalized === "B"
+  ) {
+    return replaceIfExists(selectionMap.B, original);
+  }
+
+  // 선택과목 C
+  if (
+    normalized === "선택과목C" ||
+    normalized === "선택C" ||
+    normalized === "C"
+  ) {
+    return replaceIfExists(selectionMap.C, original);
+  }
+
+  // 언어
+  if (
+    normalized.includes("언어") ||
+    normalized.includes("제2외국어") ||
+    normalized.includes("일중프") ||
+    normalized === "외국어"
+  ) {
+    return replaceIfExists(selectionMap.LANG, original);
+  }
+
+  // 생과 or 여지
+  if (
+    normalized.includes("생과or여지") ||
+    normalized.includes("생과/여지") ||
+    normalized.includes("생명과학여행지리") ||
+    normalized.includes("여행지리") && original.includes("or") ||
+    normalized.includes("생명과학") && original.includes("or")
+  ) {
+    return replaceIfExists(selectionMap.SCI_GEO, original);
+  }
+
+  // 보건 or 환경
+  if (
+    normalized.includes("보건or환경") ||
+    normalized.includes("보건/환경") ||
+    normalized.includes("보건환경")
+  ) {
+    return replaceIfExists(selectionMap.HEALTH_ENV, original);
+  }
+
+  return original;
+}
+
 async function fetchMealData(date = new Date()) {
   const mlsvYmd = formatDateYYYYMMDD(date);
   const url =
@@ -42,6 +141,8 @@ async function fetchMealData(date = new Date()) {
 async function fetchTimetableData(date = new Date()) {
   const year = getCurrentYear();
   const dateStr = formatDateYYYYMMDD(date);
+  const profile = getSavedProfile();
+
   const url =
     `https://open.neis.go.kr/hub/hisTimetable` +
     `?KEY=${CONFIG.neis.key}` +
@@ -63,11 +164,16 @@ async function fetchTimetableData(date = new Date()) {
 
   return rows
     .sort((a, b) => Number(a.PERIO) - Number(b.PERIO))
-    .map(row => ({
-      period: row.PERIO,
-      subject: row.ITRT_CNTNT,
-      room: row.CLRM_NM || "교실 정보 없음"
-    }));
+    .map(row => {
+      const rawSubject = row.ITRT_CNTNT || "";
+      const appliedSubject = applyProfileToSubject(rawSubject, profile);
+
+      return {
+        period: row.PERIO,
+        subject: appliedSubject,
+        room: row.CLRM_NM || "교실 정보 없음"
+      };
+    });
 }
 
 function getWeatherBaseDateTime(now = new Date()) {
